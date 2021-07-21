@@ -1,0 +1,53 @@
+# app.py
+import requests
+from flask import Flask, request, abort
+from linebot import (
+    LineBotApi, WebhookHandler
+)
+from linebot.exceptions import (
+    InvalidSignatureError
+)
+from linebot.models import *
+
+
+# 初始化app
+app = Flask(__name__)
+
+
+# Line Channel Access Token 
+line_bot_api = LineBotApi('Efjf1Q7BKrWKgXBsZD/e3zPbSruMJzz+Jrm4zuxdw8F+kr0dhIe6qkWge2XqXc/5An4KgDcD8nvCE3slzJbV9g8xaFMysIKqklRwvGhjDLx5dFbIo7Hv6IUJ2FAGHEgbrOM/CGXD7KcD5716FwVlkAdB04t89/1O/w1cDnyilFU=')
+# Line Channel Secret
+handler = WebhookHandler('4bce9439e81e76643f743f40ba07f314')
+
+
+# 測試web伺服器有正常渲染
+@app.route("/")
+def hello():
+    return "Hi~~!This is a Line-bot server.."
+
+
+# 監聽所有來自 /callback 的 Post Request
+@app.route("/callback", methods=['POST'])
+def callback():
+    # get X-Line-Signature header value
+    signature = request.headers['X-Line-Signature']
+    # get request body as text
+    body = request.get_data(as_text=True)
+    print(body)
+    # handle webhook body
+    try:
+        handler.handle(body, signature)
+    except InvalidSignatureError:
+        abort(400)
+    return 'OK'
+
+# 處理 Line 訊息
+@handler.add(MessageEvent, message=TextMessage)
+def handle_message(event):
+    message = TextSendMessage(text=event.message.text)
+    # 同步回傳訊息
+    # line_bot_api.reply_message(event.reply_token, message)
+
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=5000)
